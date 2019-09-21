@@ -1,32 +1,42 @@
-﻿using Dapper;
-using SlackAPI;
+﻿using SlackAPI;
 using System;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
+using DependencyInjectionWorkshop.Models.Repository;
 
 namespace DependencyInjectionWorkshop.Models
 {
-    public class ProfileDao
+    public class Sha256Adapter
     {
-        public string GetPasswordFromDb(string accountId)
+        public Sha256Adapter()
         {
-            var passwordFromDb = "";
-            using (var connection = new SqlConnection("my connection string"))
+        }
+
+        public string GetHashedPassword(string password)
+        {
+            var crypt = new System.Security.Cryptography.SHA256Managed();
+            var hash = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(password));
+            foreach (var theByte in crypto)
             {
-                passwordFromDb = connection.Query<string>("spGetUserPassword", new { Id = accountId },
-                    commandType: CommandType.StoredProcedure).SingleOrDefault();
+                hash.Append(theByte.ToString("x2"));
             }
 
-            return passwordFromDb;
+            var hashedPassword = hash.ToString();
+            return hashedPassword;
         }
     }
 
     public class AuthenticationService
     {
-        private readonly ProfileDao _profileDao = new ProfileDao();
+        private readonly ProfileDao _profileDao;
+        private readonly Sha256Adapter _sha256Adapter;
+
+        public AuthenticationService()
+        {
+            _profileDao = new ProfileDao();
+            _sha256Adapter = new Sha256Adapter();
+        }
 
         public bool Verify(string accountId, string password, string otp)
         {
@@ -40,7 +50,7 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = _profileDao.GetPasswordFromDb(accountId);
 
-            var hashedPassword = GetHashedPassword(password);
+            var hashedPassword = _sha256Adapter.GetHashedPassword(password);
 
             var currentOtp = GetCurrentOtp(accountId, httpClient);
 
@@ -94,20 +104,6 @@ namespace DependencyInjectionWorkshop.Models
             return failedCount;
         }
 
-        private static string GetHashedPassword(string password)
-        {
-            var crypt = new System.Security.Cryptography.SHA256Managed();
-            var hash = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(password));
-            foreach (var theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-
-            var hashedPassword = hash.ToString();
-            return hashedPassword;
-        }
-
         private static bool GetIsLocked(string accountId, HttpClient httpClient)
         {
             var isLockedResponse = httpClient.PostAsJsonAsync("api/failedCounter/IsLocked", accountId).Result;
@@ -135,10 +131,15 @@ namespace DependencyInjectionWorkshop.Models
             var slackClient = new SlackClient("my api token");
             slackClient.PostMessage(response1 => { }, "my channel", message, "my bot name");
         }
+
         private static void ResetFailedCount(string accountId, HttpClient httpClient)
         {
             var resetResponse = httpClient.PostAsJsonAsync("api/failedCounter/Reset", accountId).Result;
             resetResponse.EnsureSuccessStatusCode();
         }
+    }
+
+    public class FailedTooManyTimesException : Exception
+    {
     }
 }
