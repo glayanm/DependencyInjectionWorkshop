@@ -14,11 +14,13 @@ namespace DependencyInjectionWorkshop.Models
         public bool Verify(string accountId, string password, string otp)
         {
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
+
             var isLocked = GetIsLocked(accountId, httpClient);
             if (isLocked)
             {
                 throw new FailedTooManyTimesException();
             }
+
             var passwordFromDb = GetPasswordFromDb(accountId);
 
             var hashedPassword = GetHashedPassword(password);
@@ -35,7 +37,7 @@ namespace DependencyInjectionWorkshop.Models
             {
                 AddFailedCount(accountId, httpClient);
 
-                SaveFailedCount(accountId, httpClient);
+                LogFailedCount(accountId, httpClient);
 
                 Notify(accountId);
 
@@ -59,16 +61,16 @@ namespace DependencyInjectionWorkshop.Models
             slackClient.PostMessage(response1 => { }, "my channel", message, "my bot name");
         }
 
-        private static void SaveFailedCount(string accountId, HttpClient httpClient)
+        private static void LogFailedCount(string accountId, HttpClient httpClient)
         {
             var failedCount = GetFailedCount(accountId, httpClient);
-            SaveLogMessage(accountId, failedCount);
+            LogMessage($"accountId:{accountId} failed times:{failedCount}");
         }
 
-        private static void SaveLogMessage(string accountId, int failedCount)
+        private static void LogMessage(string message)
         {
             var logger = NLog.LogManager.GetCurrentClassLogger();
-            logger.Info($"accountId:{accountId} failed times:{failedCount}");
+            logger.Info(message);
         }
 
         private static int GetFailedCount(string accountId, HttpClient httpClient)
