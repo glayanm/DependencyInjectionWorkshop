@@ -76,6 +76,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\AuthenticationService.cs" />
+    <Compile Include="Models\FailedCounter.cs" />
+    <Compile Include="Models\FailedTooManyTimesException.cs" />
+    <Compile Include="Models\OtpService.cs" />
+    <Compile Include="Models\Sha256Adapter.cs" />
+    <Compile Include="Models\SlackAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Models\Repository\ProfileDao.cs" />
   </ItemGroup>
