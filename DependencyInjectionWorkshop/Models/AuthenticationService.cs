@@ -7,22 +7,23 @@ namespace DependencyInjectionWorkshop.Models
         private readonly FailedCounter _failedCounter;
         private readonly NLogAdapter _nLogAdapter;
         private readonly OtpService _otpService;
-        private readonly ProfileDao _profileDao;
+        private readonly IProfile _profile;
         private readonly Sha256Adapter _sha256Adapter;
         private readonly SlackAdapter _slackAdapter;
 
-        public AuthenticationService(FailedCounter failedCounter, NLogAdapter nLogAdapter, OtpService otpService, ProfileDao profileDao, Sha256Adapter sha256Adapter, SlackAdapter slackAdapter)
+        public AuthenticationService(FailedCounter failedCounter, NLogAdapter nLogAdapter, OtpService otpService, IProfile profile, Sha256Adapter sha256Adapter, SlackAdapter slackAdapter)
         {
             _failedCounter = failedCounter;
             _nLogAdapter = nLogAdapter;
             _otpService = otpService;
-            _profileDao = profileDao;
+            _profile = profile;
             _sha256Adapter = sha256Adapter;
             _slackAdapter = slackAdapter;
         }
+
         public AuthenticationService()
         {
-            _profileDao = new ProfileDao();
+            _profile = new ProfileDao();
             _sha256Adapter = new Sha256Adapter();
             _otpService = new OtpService();
             _slackAdapter = new SlackAdapter();
@@ -38,7 +39,7 @@ namespace DependencyInjectionWorkshop.Models
                 throw new FailedTooManyTimesException();
             }
 
-            var passwordFromDb = _profileDao.GetPasswordFromDb(accountId);
+            var passwordFromDb = _profile.GetPassword(accountId);
 
             var hashedPassword = _sha256Adapter.GetHashedPassword(password);
 
