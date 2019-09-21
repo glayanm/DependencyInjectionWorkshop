@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using SlackAPI;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -41,7 +42,18 @@ namespace DependencyInjectionWorkshop.Models
                 throw new Exception($"web api error, accountId:{account}");
             }
 
-            return passwordFromDb == hashedPassword && otp == currentOtp;
+            if (passwordFromDb == hashedPassword && otp == currentOtp)
+            {
+                return true;
+            }
+            else
+            {
+                var message = $"{account} try to login failed.";
+                var slackClient = new SlackClient("my api token");
+                slackClient.PostMessage(response1 => { }, "my channel", message, "my bot name");
+
+                return false;
+            }
         }
     }
 }
