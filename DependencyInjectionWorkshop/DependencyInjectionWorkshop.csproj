@@ -78,6 +78,7 @@
     <Compile Include="Models\AuthenticationService.cs" />
     <Compile Include="Models\FailedCounter.cs" />
     <Compile Include="Models\FailedTooManyTimesException.cs" />
+    <Compile Include="Models\NLogAdapter.cs" />
     <Compile Include="Models\OtpService.cs" />
     <Compile Include="Models\Sha256Adapter.cs" />
     <Compile Include="Models\SlackAdapter.cs" />

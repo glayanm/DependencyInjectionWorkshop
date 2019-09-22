@@ -2,33 +2,63 @@
 
 namespace DependencyInjectionWorkshop.Models
 {
-    public class AuthenticationService
+    public interface IAuthentication
     {
-        private readonly FailedCounter _failedCounter;
-        private readonly NLogAdapter _nLogAdapter;
-        private readonly OtpService _otpService;
-        private readonly IProfile _profile;
-        private readonly Sha256Adapter _sha256Adapter;
-        private readonly SlackAdapter _slackAdapter;
+        bool Verify(string accountId, string password, string otp);
+    }
 
-        public AuthenticationService(FailedCounter failedCounter, NLogAdapter nLogAdapter, OtpService otpService, IProfile profile, Sha256Adapter sha256Adapter, SlackAdapter slackAdapter)
+    public class NotificationDecorator : IAuthentication
+    {
+        private readonly IAuthentication _authentication;
+        private readonly INotification _notification;
+
+        public NotificationDecorator(IAuthentication authentication, INotification notification)
+        {
+            _authentication = authentication;
+            _notification = notification;
+        }
+
+        private void Send(string accountId)
+        {
+            _notification.Send(accountId);
+        }
+
+        public bool Verify(string accountId, string password, string otp)
+        {
+            var isVerify = _authentication.Verify(accountId, password, otp);
+            if (!isVerify)
+            {
+                Send(accountId);
+            }
+
+            return isVerify;
+        }
+    }
+
+    public class AuthenticationService : IAuthentication
+    {
+        private readonly IFailedCounter _failedCounter;
+        private readonly ILogger _logger;
+        private readonly IOtpService _otpService;
+        private readonly IProfile _profile;
+        private readonly IHash _hash;
+
+        public AuthenticationService(IFailedCounter failedCounter, ILogger logger, IOtpService otpService, IProfile profile, IHash hash)
         {
             _failedCounter = failedCounter;
-            _nLogAdapter = nLogAdapter;
+            _logger = logger;
             _otpService = otpService;
             _profile = profile;
-            _sha256Adapter = sha256Adapter;
-            _slackAdapter = slackAdapter;
+            _hash = hash;
         }
 
         public AuthenticationService()
         {
             _profile = new ProfileDao();
-            _sha256Adapter = new Sha256Adapter();
+            _hash = new Sha256Adapter();
             _otpService = new OtpService();
-            _slackAdapter = new SlackAdapter();
             _failedCounter = new FailedCounter();
-            _nLogAdapter = new NLogAdapter();
+            _logger = new NLogAdapter();
         }
 
         public bool Verify(string accountId, string password, string otp)
@@ -41,7 +71,7 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = _profile.GetPassword(accountId);
 
-            var hashedPassword = _sha256Adapter.GetHashedPassword(password);
+            var hashedPassword = _hash.Compute(password);
 
             var currentOtp = _otpService.GetCurrentOtp(accountId);
 
@@ -57,9 +87,9 @@ namespace DependencyInjectionWorkshop.Models
 
                 var failedCount = _failedCounter.GetFailedCount(accountId);
 
-                _nLogAdapter.LogMessage($"accountId:{accountId} failed times:{failedCount}");
+                _logger.Info($"accountId:{accountId} failed times:{failedCount}");
 
-                _slackAdapter.Notify(accountId);
+                //_notificationDecorator.Send(accountId);
 
                 return false;
             }
