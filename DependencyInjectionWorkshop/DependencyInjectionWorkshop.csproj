@@ -78,6 +78,7 @@
     <Compile Include="Models\AuthenticationBaseDecorator.cs" />
     <Compile Include="Models\AuthenticationService.cs" />
     <Compile Include="Models\FailedCounter.cs" />
+    <Compile Include="Models\FailedCounterDecorator.cs" />
     <Compile Include="Models\FailedTooManyTimesException.cs" />
     <Compile Include="Models\IAuthentication.cs" />
     <Compile Include="Models\NLogAdapter.cs" />

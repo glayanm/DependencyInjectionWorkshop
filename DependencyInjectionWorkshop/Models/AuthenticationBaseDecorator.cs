@@ -11,8 +11,7 @@
 
         public virtual bool Verify(string accountId, string password, string otp)
         {
-            var isVerify = _authentication.Verify(accountId, password, otp);
-            return isVerify;
+            return _authentication.Verify(accountId, password, otp);
         }
     }
 }

@@ -79,6 +79,8 @@ namespace DependencyInjectionWorkshopTests
                 new AuthenticationService(_failedCounter, _logger, _otpService, _profile, _hash);
 
             _authentication = new NotificationDecorator(_authentication, _notification);
+
+            _authentication = new FailedCounterDecorator(_authentication,_failedCounter);
         }
 
         private static void ShouldBeInvalid(bool isValid)
