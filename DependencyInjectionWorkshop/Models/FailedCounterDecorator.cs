@@ -4,7 +4,8 @@
     {
         private readonly IFailedCounter _failedCounter;
 
-        public FailedCounterDecorator(IAuthentication authenticationService, IFailedCounter failedCounter) : base(authenticationService)
+        public FailedCounterDecorator(IAuthentication authenticationService, IFailedCounter failedCounter) : 
+            base(authenticationService)
         {
             _failedCounter = failedCounter;
         }
@@ -16,12 +17,22 @@
             {
                 Reset(accountId);
             }
+            else
+            {
+                AddFailedCount(accountId);
+            }
+
             return isVerify;
         }
 
         private void Reset(string accountId)
         {
             _failedCounter.ResetFailedCount(accountId);
+        }
+
+        private void AddFailedCount(string accountId)
+        {
+            _failedCounter.AddFailedCount(accountId);
         }
     }
 }

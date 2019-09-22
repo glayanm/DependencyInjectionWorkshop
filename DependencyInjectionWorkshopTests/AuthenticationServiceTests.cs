@@ -80,7 +80,7 @@ namespace DependencyInjectionWorkshopTests
 
             _authentication = new NotificationDecorator(_authentication, _notification);
 
-            _authentication = new FailedCounterDecorator(_authentication,_failedCounter);
+            _authentication = new FailedCounterDecorator(_authentication, _failedCounter);
         }
 
         private static void ShouldBeInvalid(bool isValid)
